@@ -1,5 +1,12 @@
 Create:
  At first I had run the following command wich eturned an error as specified below
+
+Book.object.create(
+    title = '1984', 
+    author = 'George Orwell', 
+    published_year = 1949
+)
+
     >>> new_book = Book(title = '1984', author = 'George Orwell', published_year = 1949) 
 The error generated was as below 
         Traceback (most recent call last):
@@ -12,5 +19,11 @@ The error generated was as below
 I realized that there was an error and corrected it and run it
     >>> new_book = Book(title = '1984', author = 'George Orwell', publication_year = 1949) 
 
+Another option to take
+Book.object.create(
+    title = '1984', 
+    author = 'George Orwell', 
+    published_year = 1949
+)
 
 The command ran successfully!!!!!!!!!!!!!!!!!!!!!!!!!
