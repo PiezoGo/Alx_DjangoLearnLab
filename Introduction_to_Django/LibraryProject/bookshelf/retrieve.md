@@ -26,4 +26,7 @@ Here are the commands and their corresponding outputs
     >>> new_book.publication_year
     1949
 
+Another option is:
+    Book.objects.get(id=1)
+
 I was successfull in retrieving the object that I created!!
