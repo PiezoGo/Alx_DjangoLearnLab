@@ -2,38 +2,41 @@ from django.shortcuts import render, redirect
 from .models import Book
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views import View
 
-# Helper functions to check roles
-def admin(user):
-    return hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
+# Base CBV with role check
+class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    role = None  # should be overridden in subclasses
 
-def librarian(user):
-    return hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
-
-def member(user):
-    return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
+    def test_func(self):
+        user_profile = getattr(self.request.user, 'userprofile', None)
+        return user_profile is not None and user_profile.role == self.role
 
 
-# Role-specific views
-@login_required
-@user_passes_test(is_admin)
-def admin_view(request):
-    return render(request, 'admin_view.html')
+# Admin View
+class Admin(RoleRequiredMixin, View):
+    role = 'Admin'
+
+    def get(self, request):
+        return render(request, 'admin_view.html')
 
 
-@login_required
-@user_passes_test(is_librarian)
-def librarian_view(request):
-    return render(request, 'librarian_view.html')
+# Librarian View
+class Librarian(RoleRequiredMixin, View):
+    role = 'Librarian'
+
+    def get(self, request):
+        return render(request, 'librarian_view.html')
 
 
-@login_required
-@user_passes_test(is_member)
-def member_view(request):
-    return render(request, 'member_view.html')
+# Member View
+class Member(RoleRequiredMixin, View):
+    role = 'Member'
+
+    def get(self, request):
+        return render(request, 'member_view.html')
 
 def LoginView(request):
     if request.method == 'POST':
