@@ -7,13 +7,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 # Helper functions to check roles
-def is_admin(user):
+def admin(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
 
-def is_librarian(user):
+def librarian(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
 
-def is_member(user):
+def member(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
 
 
