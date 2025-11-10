@@ -11,7 +11,7 @@ def list_books(request):
       context = {'book_list': books}  # Create a context dictionary with book list
       return render(request, 'books/list_books.html', context)
 
-class BookDetailView(DetailView):
+class LibraryDetailView(DetailView):
   model = Book
   template_name = 'books/book_detail.html'
 
