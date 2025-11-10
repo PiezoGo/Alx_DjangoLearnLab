@@ -20,3 +20,12 @@ class LibraryDetailView(DetailView):
     context = super().get_context_data(**kwargs)  # Get default context data
     book = self.get_object()  # Retrieve the current book instance
     context['average_rating'] = book.get_average_rating() 
+
+from django.contrib.auth.forms import UserCreationForm
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
+
+class SignUpView(CreateView):
+    form_class = UserCreationForm
+    success_url = reverse_lazy('login')
+    template_name = 'registration/reister.html'
