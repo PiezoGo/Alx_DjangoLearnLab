@@ -16,7 +16,7 @@ class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 
 # Admin View
-class Admin(RoleRequiredMixin, View):
+class admin_view(RoleRequiredMixin, View):
     role = 'Admin'
 
     def get(self, request):
