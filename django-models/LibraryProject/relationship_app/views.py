@@ -4,7 +4,7 @@ from django.views.generic import DetailView
 
 
 # relationship_app/list_books.html
-
+#relationship_app/library_detail.html", "library", "from .models import Library
 def list_books(request):
       """Retrieves all books and renders a template displaying the list."""
       books = Book.objects.all()  # Fetch all book instances from the database
