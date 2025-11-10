@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 
 class Author(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default='George Orwell')
     def __str__(self):
         return self.name
 
@@ -23,6 +23,6 @@ class Library(models.Model):
 
 class Librarian(models.Model):
     name = models.CharField(max_length=100)
-    library = models.OneToOneField(Library, on_delete=models.CASCADE)
+    library = models.OneToOneField(Library, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.name
