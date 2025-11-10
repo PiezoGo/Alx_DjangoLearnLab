@@ -1,8 +1,35 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Book
 from django.views.generic.detail import DetailView
-from django.contrib.auth import login
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib import messages
 
+def LoginView(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.info(request, f"You are now logged in as {username}.")
+                return redirect('home')
+            else:
+                messages.error(request, "Invalid username or password.")
+        else:
+            messages.error(request, "Invalid login details.")
+    else:
+        form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form})
+
+
+# User Logout
+def LogoutView(request):
+    logout(request)
+    messages.info(request, "You have successfully logged out.")
+    return redirect('login')
 
 # relationship_app/list_books.html
 #relationship_app/library_detail.html", "library", "from .models import Library
