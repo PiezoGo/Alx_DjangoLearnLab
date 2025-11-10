@@ -4,6 +4,36 @@ from django.views.generic.detail import DetailView
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+# Helper functions to check roles
+def is_admin(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
+
+def is_librarian(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
+
+def is_member(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
+
+
+# Role-specific views
+@login_required
+@user_passes_test(is_admin)
+def admin_view(request):
+    return render(request, 'admin_view.html')
+
+
+@login_required
+@user_passes_test(is_librarian)
+def librarian_view(request):
+    return render(request, 'librarian_view.html')
+
+
+@login_required
+@user_passes_test(is_member)
+def member_view(request):
+    return render(request, 'member_view.html')
 
 def LoginView(request):
     if request.method == 'POST':
@@ -28,8 +58,10 @@ def LoginView(request):
 # User Logout
 def LogoutView(request):
     logout(request)
+    
     messages.info(request, "You have successfully logged out.")
     return redirect('login')
+
 
 # relationship_app/list_books.html
 #relationship_app/library_detail.html", "library", "from .models import Library
