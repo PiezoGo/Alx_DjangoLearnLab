@@ -3,6 +3,7 @@ from .models import Book
 from django.views.generic import DetailView
 
 
+# relationship_app/list_books.html
 
 def list_books(request):
       """Retrieves all books and renders a template displaying the list."""
