@@ -1,94 +1,94 @@
-from django.shortcuts import render, redirect
-from .models import Book
-from django.views.generic.detail import DetailView
-from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views import View
+from .models import Book
+from .models import Library
+from django.views.generic.detail import DetailView
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponseForbidden
+from .models import UserProfile
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import permission_required
 
-# Base CBV with role check
-class RoleRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    role = None  # should be overridden in subclasses
-
-    def test_func(self):
-        user_profile = getattr(self.request.user, 'userprofile', None)
-        return user_profile is not None and user_profile.role == self.role
-
-
-# Admin View
-class admin_view(RoleRequiredMixin, View):
-    role = 'Admin'
-
-    def get(self, request):
-        return render(request, 'admin_view.html')
-
-
-# Librarian View
-class Librarian(RoleRequiredMixin, View):
-    role = 'Librarian'
-
-    def get(self, request):
-        return render(request, 'librarian_view.html')
-
-
-# Member View
-class Member(RoleRequiredMixin, View):
-    role = 'Member'
-
-    def get(self, request):
-        return render(request, 'member_view.html')
-
-def LoginView(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.info(request, f"You are now logged in as {username}.")
-                return redirect('home')
-            else:
-                messages.error(request, "Invalid username or password.")
-        else:
-            messages.error(request, "Invalid login details.")
-    else:
-        form = AuthenticationForm()
-    return render(request, 'registration/login.html', {'form': form})
-
-
-# User Logout
-def LogoutView(request):
-    logout(request)
-    
-    messages.info(request, "You have successfully logged out.")
-    return redirect('login')
-
-
-# relationship_app/list_books.html
-#relationship_app/library_detail.html", "library", "from .models import Library
 def list_books(request):
-      """Retrieves all books and renders a template displaying the list."""
-      books = Book.objects.all()  # Fetch all book instances from the database
-      context = {'book_list': books}  # Create a context dictionary with book list
-      return render(request, 'books/list_books.html', context)
+	books = Book.objects.all()
+	return render(request, "relationship_app/list_books.html", {'books': books})
 
 class LibraryDetailView(DetailView):
-  model = Book
-  template_name = 'books/book_detail.html'
+	model = Library
+	template_name = 'relationship_app/library_detail.html'
+	context_object_name = 'library'
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  
+            return redirect('login')  
+    else:
+        form = UserCreationForm()
+    return render(request, 'relationship_app/register.html', {'form': form})
 
-  def get_context_data(self, **kwargs):
-    """Injects additional context data specific to the book."""
-    context = super().get_context_data(**kwargs)  # Get default context data
-    book = self.get_object()  # Retrieve the current book instance
-    context['average_rating'] = book.get_average_rating() 
+class CustomLoginView(LoginView):
+    template_name = 'relationship_app/login.html'
 
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
+class CustomLogoutView(LogoutView):
+    template_name = 'relationship_app/logout.html'
+	
+def is_admin(user):
+    return user.userprofile.role == 'Admin'
 
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy('login')
-    template_name = 'registration/reister.html'
+def is_librarian(user):
+    return user.userprofile.role == 'Librarian'
+
+def is_member(user):
+    return user.userprofile.role == 'Member'
+
+@login_required
+@user_passes_test(is_admin)
+def admin_view(request):
+    return render(request, 'relationship_app/admin_view.html')
+
+@login_required
+@user_passes_test(is_librarian)
+def librarian_view(request):
+    return render(request, 'relationship_app/librarian_view.html')
+
+@login_required
+@user_passes_test(is_member)
+def member_view(request):
+    return render(request, 'relationship_app/member_view.html')
+
+@permission_required('relationship_app.can_add_book', raise_exception=True)
+def add_book(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        author_id = request.POST.get('author')
+        publication_year = request.POST.get('publication_year')
+
+        book = Book(title=title, author_id=author_id, publication_year=publication_year)
+        book.save()
+        return redirect('book_list')  
+    return render(request, 'relationship_app/add_book.html')
+
+@permission_required('relationship_app.can_change_book', raise_exception=True)
+def edit_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == 'POST':
+        book.title = request.POST.get('title')
+        book.author_id = request.POST.get('author')
+        book.publication_year = request.POST.get('publication_year')
+        book.save()
+        return redirect('book_list')  
+    return render(request, 'relationship_app/edit_book.html', {'book': book})
+
+@permission_required('relationship_app.can_delete_book', raise_exception=True)
+def delete_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == 'POST':
+        book.delete()
+        return redirect('book_list')  
+
+    return render(request, 'relationship_app/delete_book.html', {'book': book})
